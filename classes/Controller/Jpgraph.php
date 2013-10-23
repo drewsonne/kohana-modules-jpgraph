@@ -13,6 +13,11 @@ abstract class Controller_Jpgraph extends Controller
 
     protected $_title = 'Title';
 
+    protected $_y_axis_format = '%2.0f%%';
+
+    protected $_stacked = false;
+
+
     public function action_index()
     {
         $width = $height = 0;
@@ -46,7 +51,7 @@ abstract class Controller_Jpgraph extends Controller
         $graph->yaxis->HideZeroLabel();
         $graph->yaxis->HideLine(false);
         $graph->yaxis->HideTicks(false, false);
-        $graph->yaxis->SetLabelFormatString("%2.0f%%");
+        $graph->yaxis->SetLabelFormatString($this->_y_axis_format);
 
         $graph->xaxis->SetLabelAngle(70);
 
@@ -54,6 +59,9 @@ abstract class Controller_Jpgraph extends Controller
         $graph->xgrid->SetLineStyle("solid");
         $graph->xgrid->SetColor('#E3E3E3');
 
+        if($this->_stacked) {
+            $stackedGraphs = array();
+        }
         foreach ($this->_get_series() as $title => $series) {
             $lineplot = "lp_{$title}";
 
@@ -62,10 +70,19 @@ abstract class Controller_Jpgraph extends Controller
             $$lineplot->setFilled(true);
             $$lineplot->SetFillColor($series['colour'] . "@0.5");
 
-            $graph->Add($$lineplot);
-
             $$lineplot->SetColor($series['colour']);
             $$lineplot->SetLegend($title);
+
+            if($this->_stacked) {
+                $stackedGraphs[] = $$lineplot;
+            } else {
+                $graph->Add($$lineplot);
+            }
+
+        }
+
+        if($this->_stacked) {
+            $graph->Add(new AccLinePlot($stackedGraphs));
         }
 
 //        ob_start();
